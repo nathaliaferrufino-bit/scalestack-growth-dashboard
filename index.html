@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Scalestack marketing and pipeline dashboard: Instantly, LinkedIn, GA4 and HubSpot in one view.">
+<title>Growth Command Center</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#F5F1E1; --surface:#FFFFFF; --surface-2:#EDE7D2; --surface-3:#E4DEC6;
+    --border:#DFD6B8; --border-soft:#EAE3CB;
+    --ink:#15271D; --ink-2:#45564A; --muted:#7C8874;
+    --forest:#163A2C; --forest-strong:#0E2A20;
+    --lime:#E3F79A; --lime-ink:#16332A; --lime-dim:#CFE07E;
+    --accent-line:#2F7A4E; --accent-line-soft:#2F7A4E33;
+    --good:#2F7D4C; --warning:#B8862E; --critical:#B5432E;
+    --cat-1:#2a78d6; --cat-2:#eb6834; --cat-3:#1baf7a; --cat-4:#eda100;
+    --ord-1:#8CC061; --ord-2:#6BAA5C; --ord-3:#4A9152; --ord-4:#2F7A4E;
+    --band-bg:#0E2A20; --band-surface:#163A2C; --band-border:#2A5240;
+    --band-ink:#F3F1E4; --band-ink-2:#B9CBBD;
+    --shadow: 0 1px 2px rgba(21,39,29,.06), 0 8px 24px -12px rgba(21,39,29,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg:#0E2A20; --surface:#16332A; --surface-2:#1B4433; --surface-3:#204A38;
+      --border:#2A5240; --border-soft:#1F3F30;
+      --ink:#F3F1E4; --ink-2:#C9D6C6; --muted:#8FA890;
+      --forest:#0B2018; --forest-strong:#081A13;
+      --lime:#E3F79A; --lime-ink:#16332A; --lime-dim:#CFE07E;
+      --accent-line:#6FCB8C; --accent-line-soft:#6FCB8C33;
+      --good:#6FCB8C; --warning:#E0B052; --critical:#E0785C;
+      --cat-1:#3987e5; --cat-2:#d95926; --cat-3:#199e70; --cat-4:#c98500;
+      --ord-1:#5A9A55; --ord-2:#78B563; --ord-3:#9BCB76; --ord-4:#C4E896;
+      --band-bg:#081A13; --band-surface:#0F2A20; --band-border:#1F3F30;
+      --band-ink:#F3F1E4; --band-ink-2:#9FB6A6;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#0E2A20; --surface:#16332A; --surface-2:#1B4433; --surface-3:#204A38;
+    --border:#2A5240; --border-soft:#1F3F30;
+    --ink:#F3F1E4; --ink-2:#C9D6C6; --muted:#8FA890;
+    --forest:#0B2018; --forest-strong:#081A13;
+    --lime:#E3F79A; --lime-ink:#16332A; --lime-dim:#CFE07E;
+    --accent-line:#6FCB8C; --accent-line-soft:#6FCB8C33;
+    --good:#6FCB8C; --warning:#E0B052; --critical:#E0785C;
+    --cat-1:#3987e5; --cat-2:#d95926; --cat-3:#199e70; --cat-4:#c98500;
+    --ord-1:#5A9A55; --ord-2:#78B563; --ord-3:#9BCB76; --ord-4:#C4E896;
+    --band-bg:#081A13; --band-surface:#0F2A20; --band-border:#1F3F30;
+    --band-ink:#F3F1E4; --band-ink-2:#9FB6A6;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Karla", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{ font-family:"Manrope", ui-sans-serif, system-ui, sans-serif; }
+  .mono{ font-family:"IBM Plex Mono", ui-monospace, monospace; }
+  .tabular{ font-variant-numeric: tabular-nums; }
+  a{ color:inherit; }
+  button{ font:inherit; }
+
+  .wrap{ max-width:1240px; margin:0 auto; padding:0 24px 64px; }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:var(--bg); border-bottom:1px solid var(--border);
+    backdrop-filter: blur(6px);
+  }
+  .topbar-inner{
+    max-width:1240px; margin:0 auto; padding:18px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px; background:var(--forest);
+    color:var(--lime); display:flex; align-items:center; justify-content:center;
+    font-family:"Manrope"; font-weight:800; font-size:18px; letter-spacing:-1px; flex:none;
+  }
+  .brand-text .name{ font-family:"Manrope"; font-weight:800; font-size:16px; letter-spacing:-0.01em; }
+  .brand-text .sub{ font-size:12px; color:var(--muted); margin-top:1px; }
+
+  .controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .range-group{
+    display:flex; background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:3px; gap:2px;
+  }
+  .range-btn{
+    border:none; background:transparent; color:var(--ink-2);
+    font-size:13px; font-weight:600; padding:7px 12px; border-radius:7px; cursor:pointer;
+  }
+  .range-btn:hover{ color:var(--ink); }
+  .range-btn[aria-pressed="true"]{ background:var(--forest); color:var(--lime); }
+  .range-btn:focus-visible, .icon-btn:focus-visible, .upload-btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent-line); outline-offset:2px;
+  }
+  .icon-btn{
+    display:flex; align-items:center; gap:7px; border:1px solid var(--border);
+    background:var(--surface); color:var(--ink); border-radius:10px; padding:8px 13px;
+    font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .icon-btn:hover{ border-color:var(--accent-line); }
+
+  .sync-line{
+    font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; margin-top:10px;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--good); flex:none; }
+  .dot.sample{ background:var(--warning); }
+
+  /* ---------- kpi band ---------- */
+  .kpi-band{
+    background:var(--band-bg); color:var(--band-ink);
+    border-bottom:1px solid var(--band-border);
+  }
+  .kpi-band-inner{
+    max-width:1240px; margin:0 auto; padding:28px 24px 32px;
+  }
+  .kpi-eyebrow{
+    font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--band-ink-2); margin:0 0 14px;
+  }
+  .kpi-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+  }
+  .kpi-tile{
+    background:var(--band-surface); border:1px solid var(--band-border); border-radius:14px;
+    padding:16px 16px 14px;
+  }
+  .kpi-label{ font-size:12.5px; color:var(--band-ink-2); font-weight:600; }
+  .kpi-value{ font-family:"Manrope"; font-weight:800; font-size:26px; margin-top:6px; letter-spacing:-0.01em; }
+  .kpi-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-top:10px; }
+  .kpi-delta{ font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:3px; }
+  .kpi-delta.up{ color:var(--good); } .kpi-delta.down{ color:var(--critical); }
+  .kpi-spark{ flex:none; }
+
+  /* ---------- main grid ---------- */
+  .modules{
+    display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:26px;
+  }
+  @media (max-width:880px){ .modules{ grid-template-columns:1fr; } .kpi-grid{ grid-template-columns:1fr 1fr; } }
+
+  .module{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:20px 20px 18px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .module-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .module-id{ display:flex; align-items:center; gap:10px; }
+  .chip{
+    width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-family:"Manrope"; font-weight:800; font-size:14px; flex:none;
+  }
+  .chip.forest{ background:var(--forest); color:var(--lime); }
+  .eyebrow{ font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .module-title{ font-family:"Manrope"; font-weight:700; font-size:15.5px; margin-top:2px; }
+
+  .status-pill{
+    font-family:"IBM Plex Mono"; font-size:10.5px; padding:4px 8px; border-radius:999px;
+    display:flex; align-items:center; gap:5px; border:1px solid var(--border); color:var(--ink-2); white-space:nowrap;
+  }
+  .status-pill .dot{ background:var(--good); }
+  .status-pill.sample .dot{ background:var(--warning); }
+
+  .headline-metric{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .headline-metric .val{ font-family:"Manrope"; font-weight:800; font-size:32px; letter-spacing:-0.01em; }
+  .headline-metric .cap{ font-size:12.5px; color:var(--muted); }
+
+  .chart-box{ position:relative; }
+  .chart-box svg{ display:block; width:100%; height:auto; overflow:visible; }
+  .axis-label{ fill:var(--muted); font-family:"IBM Plex Mono"; font-size:9.5px; }
+  .grid-line{ stroke:var(--border-soft); stroke-width:1; }
+  .crosshair{ stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; opacity:0; }
+  .hover-dot{ opacity:0; }
+
+  .tooltip{
+    position:absolute; pointer-events:none; background:var(--forest); color:var(--band-ink);
+    border-radius:8px; padding:7px 10px; font-size:11.5px; line-height:1.4; box-shadow:var(--shadow);
+    transform:translate(-50%,-115%); white-space:nowrap; opacity:0; transition:opacity .08s ease; z-index:5;
+  }
+  .tooltip b{ font-family:"IBM Plex Mono"; }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .stat{ background:var(--surface-2); border-radius:10px; padding:9px 11px; }
+  .stat .n{ font-family:"IBM Plex Mono"; font-weight:500; font-size:15px; }
+  .stat .l{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-2); }
+  .legend-item{ display:flex; align-items:center; gap:6px; }
+  .legend-swatch{ width:9px; height:9px; border-radius:3px; flex:none; }
+
+  .funnel{ display:flex; flex-direction:column; gap:8px; }
+  .funnel-row{ display:grid; grid-template-columns:86px 1fr 64px; align-items:center; gap:10px; }
+  .funnel-name{ font-size:12px; color:var(--ink-2); font-weight:600; }
+  .funnel-track{ background:var(--surface-2); border-radius:7px; height:28px; position:relative; overflow:hidden; }
+  .funnel-fill{ height:100%; border-radius:7px; display:flex; align-items:center; padding:0 10px; }
+  .funnel-fill span{ font-family:"IBM Plex Mono"; font-size:12px; color:var(--lime-ink); font-weight:500; }
+  .funnel-conv{ font-family:"IBM Plex Mono"; font-size:11px; color:var(--muted); text-align:right; }
+  .funnel-arrow{ font-size:10.5px; color:var(--muted); text-align:center; margin:-3px 0; }
+
+  .upload-zone{
+    border:1.5px dashed var(--border); border-radius:12px; padding:14px; text-align:center;
+    background:var(--surface-2); cursor:pointer; transition:border-color .1s ease;
+  }
+  .upload-zone:hover, .upload-zone.dragover{ border-color:var(--accent-line); }
+  .upload-zone input{ display:none; }
+  .upload-title{ font-size:12.5px; font-weight:700; }
+  .upload-sub{ font-size:11.5px; color:var(--muted); margin-top:3px; }
+  .upload-note{ font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+
+  .sample-banner{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:12px;
+    padding:12px 14px; font-size:12.5px; color:var(--ink-2); display:flex; gap:10px; align-items:flex-start;
+    margin-top:22px;
+  }
+  .sample-banner b{ color:var(--ink); }
+
+  footer{
+    margin-top:28px; padding-top:20px; border-top:1px solid var(--border);
+    font-size:12px; color:var(--muted); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+
+  .custom-range{ display:none; align-items:center; gap:6px; }
+  .custom-range.show{ display:flex; }
+  .custom-range input[type=date]{
+    font:inherit; font-size:12.5px; background:var(--surface); color:var(--ink);
+    border:1px solid var(--border); border-radius:8px; padding:5px 7px;
+  }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">»</div>
+      <div class="brand-text">
+        <div class="name">Growth Command Center</div>
+        <div class="sub">Scalestack · Marketing &amp; Pipeline Performance</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="range-group" role="group" aria-label="Date range">
+        <button class="range-btn" data-range="7">7D</button>
+        <button class="range-btn" data-range="30" aria-pressed="true">30D</button>
+        <button class="range-btn" data-range="90">90D</button>
+        <button class="range-btn" data-range="all">All</button>
+        <button class="range-btn" data-range="custom">Custom</button>
+      </div>
+      <div class="custom-range" id="customRange">
+        <input type="date" id="rangeStart">
+        <span class="mono" style="color:var(--muted); font-size:12px;">→</span>
+        <input type="date" id="rangeEnd">
+      </div>
+      <button class="icon-btn" id="exportBtn">⭳ Export CSV</button>
+    </div>
+  </div>
+  <div class="topbar-inner" style="padding-top:0; margin-top:-10px; flex-wrap:wrap;">
+    <span id="syncLine" style="display:flex; flex-wrap:wrap; align-items:center;"></span>
+    <span class="sync-line">Each viewer sets their own date range. It never changes what others see.</span>
+  </div>
+</div>
+
+<div class="kpi-band">
+  <div class="kpi-band-inner">
+    <p class="kpi-eyebrow">» Scalestack intelligence layer · Pipeline pulse for the selected range</p>
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="modules" id="modules"></div>
+
+  <div class="sample-banner" id="sampleBanner" hidden>
+    <span>◐</span>
+    <span><b>This is a static snapshot, not a live feed.</b> <span id="snapshotNote"></span></span>
+  </div>
+
+  <footer>
+    <span>Static snapshot as of Sep 8, 2026. Ask the team to refresh and re-publish for newer numbers.</span>
+    <span class="mono">Built for the Scalestack board</span>
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function(){
+
+/* ============================== utilities ============================== */
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function fmtDate(d){ return d.toISOString().slice(0,10); }
+function addDays(d, n){ const nd = new Date(d); nd.setDate(nd.getDate()+n); return nd; }
+function fmtShort(dateStr){
+  const d = new Date(dateStr+"T00:00:00");
+  return d.toLocaleDateString("en-US",{month:"short", day:"numeric"});
+}
+function fmtInt(n){ return Math.round(n).toLocaleString("en-US"); }
+function fmtPct(n, digits){ return (n*100).toFixed(digits==null?1:digits)+"%"; }
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ============================== static data snapshot ============================== */
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const SNAPSHOT_DATE = "2026-09-08";
+const SNAPSHOT_NOTE = "Static snapshot pulled from Instantly, LinkedIn, GA4 and HubSpot on Sep 8, 2026. Ping the team to refresh with newer numbers.";
+
+const SAMPLE = {
+  instantly: [{"date":"2026-06-11","sent":1,"opens":1,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-12","sent":1,"opens":1,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-13","sent":1,"opens":0,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-14","sent":0,"opens":1,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-15","sent":2,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-16","sent":2,"opens":1,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-17","sent":1,"opens":2,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-06-18","sent":2,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-19","sent":2,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-20","sent":1,"opens":0,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-06-21","sent":1,"opens":1,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-22","sent":3,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-23","sent":2,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-24","sent":3,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-25","sent":3,"opens":3,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-06-26","sent":3,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-27","sent":1,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-28","sent":2,"opens":1,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-29","sent":3,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-06-30","sent":3,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-01","sent":3,"opens":3,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-07-02","sent":3,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-03","sent":4,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-04","sent":1,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-05","sent":2,"opens":1,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-06","sent":4,"opens":4,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-07","sent":4,"opens":4,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-08","sent":4,"opens":4,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-07-09","sent":5,"opens":4,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-10","sent":4,"opens":5,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-11","sent":3,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-12","sent":2,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-13","sent":4,"opens":4,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-14","sent":5,"opens":5,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-15","sent":6,"opens":5,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-07-16","sent":5,"opens":5,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-17","sent":5,"opens":5,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-18","sent":2,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-19","sent":3,"opens":2,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-20","sent":6,"opens":6,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-21","sent":6,"opens":5,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-07-22","sent":5,"opens":6,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-23","sent":7,"opens":6,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-24","sent":6,"opens":6,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-25","sent":3,"opens":3,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-07-26","sent":3,"opens":2,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-27","sent":6,"opens":6,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-28","sent":7,"opens":7,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-07-29","sent":7,"opens":6,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-07-30","sent":7,"opens":7,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-07-31","sent":6,"opens":6,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-01","sent":4,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-02","sent":3,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-03","sent":7,"opens":7,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-08-04","sent":7,"opens":7,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-05","sent":8,"opens":7,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-06","sent":7,"opens":7,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-07","sent":8,"opens":7,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-08-08","sent":3,"opens":4,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-09","sent":4,"opens":3,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-10","sent":8,"opens":8,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-11","sent":8,"opens":7,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-08-12","sent":8,"opens":8,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-13","sent":9,"opens":8,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-14","sent":8,"opens":8,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-08-15","sent":4,"opens":4,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-16","sent":4,"opens":3,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-17","sent":9,"opens":9,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-18","sent":9,"opens":8,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-08-19","sent":9,"opens":9,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-20","sent":9,"opens":8,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-21","sent":9,"opens":9,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-08-22","sent":4,"opens":4,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-23","sent":4,"opens":4,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-24","sent":10,"opens":9,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-08-25","sent":9,"opens":9,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-26","sent":10,"opens":9,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-27","sent":10,"opens":9,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-08-28","sent":10,"opens":10,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-08-29","sent":4,"opens":4,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-08-30","sent":5,"opens":5,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-08-31","sent":11,"opens":10,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-09-01","sent":10,"opens":10,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-09-02","sent":11,"opens":10,"replies":0,"opportunities":1,"pipeline":10000},{"date":"2026-09-03","sent":11,"opens":11,"replies":1,"opportunities":0,"pipeline":0},{"date":"2026-09-04","sent":11,"opens":10,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-09-05","sent":5,"opens":5,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-09-06","sent":5,"opens":4,"replies":0,"opportunities":0,"pipeline":0},{"date":"2026-09-07","sent":12,"opens":11,"replies":1,"opportunities":1,"pipeline":10000},{"date":"2026-09-08","sent":11,"opens":11,"replies":1,"opportunities":0,"pipeline":0}],
+  linkedin: [{"date":"2026-06-11","impressions":18,"reactions":1,"comments":0,"reposts":0,"followers":3310},{"date":"2026-06-12","impressions":21,"reactions":0,"comments":0,"reposts":0,"followers":3311},{"date":"2026-06-13","impressions":8,"reactions":1,"comments":0,"reposts":0,"followers":3311},{"date":"2026-06-14","impressions":9,"reactions":0,"comments":0,"reposts":0,"followers":3311},{"date":"2026-06-15","impressions":30,"reactions":1,"comments":0,"reposts":0,"followers":3312},{"date":"2026-06-16","impressions":36,"reactions":2,"comments":1,"reposts":0,"followers":3312},{"date":"2026-06-17","impressions":43,"reactions":1,"comments":0,"reposts":0,"followers":3313},{"date":"2026-06-18","impressions":45,"reactions":2,"comments":0,"reposts":0,"followers":3313},{"date":"2026-06-19","impressions":49,"reactions":2,"comments":0,"reposts":0,"followers":3314},{"date":"2026-06-20","impressions":19,"reactions":0,"comments":0,"reposts":0,"followers":3314},{"date":"2026-06-21","impressions":19,"reactions":1,"comments":0,"reposts":0,"followers":3315},{"date":"2026-06-22","impressions":58,"reactions":2,"comments":1,"reposts":0,"followers":3315},{"date":"2026-06-23","impressions":63,"reactions":2,"comments":0,"reposts":0,"followers":3316},{"date":"2026-06-24","impressions":65,"reactions":3,"comments":0,"reposts":0,"followers":3317},{"date":"2026-06-25","impressions":66,"reactions":2,"comments":0,"reposts":0,"followers":3317},{"date":"2026-06-26","impressions":73,"reactions":3,"comments":1,"reposts":0,"followers":3318},{"date":"2026-06-27","impressions":26,"reactions":1,"comments":0,"reposts":0,"followers":3319},{"date":"2026-06-28","impressions":27,"reactions":1,"comments":0,"reposts":0,"followers":3319},{"date":"2026-06-29","impressions":84,"reactions":3,"comments":0,"reposts":0,"followers":3320},{"date":"2026-06-30","impressions":85,"reactions":3,"comments":1,"reposts":0,"followers":3321},{"date":"2026-07-01","impressions":88,"reactions":3,"comments":0,"reposts":0,"followers":3322},{"date":"2026-07-02","impressions":91,"reactions":4,"comments":0,"reposts":0,"followers":3323},{"date":"2026-07-03","impressions":94,"reactions":3,"comments":1,"reposts":1,"followers":3323},{"date":"2026-07-04","impressions":34,"reactions":1,"comments":0,"reposts":0,"followers":3324},{"date":"2026-07-05","impressions":34,"reactions":2,"comments":0,"reposts":0,"followers":3325},{"date":"2026-07-06","impressions":103,"reactions":3,"comments":1,"reposts":0,"followers":3325},{"date":"2026-07-07","impressions":109,"reactions":4,"comments":0,"reposts":0,"followers":3326},{"date":"2026-07-08","impressions":116,"reactions":5,"comments":1,"reposts":0,"followers":3327},{"date":"2026-07-09","impressions":121,"reactions":4,"comments":0,"reposts":0,"followers":3328},{"date":"2026-07-10","impressions":125,"reactions":5,"comments":1,"reposts":0,"followers":3329},{"date":"2026-07-11","impressions":44,"reactions":1,"comments":0,"reposts":0,"followers":3329},{"date":"2026-07-12","impressions":44,"reactions":2,"comments":0,"reposts":0,"followers":3330},{"date":"2026-07-13","impressions":132,"reactions":5,"comments":1,"reposts":0,"followers":3331},{"date":"2026-07-14","impressions":134,"reactions":5,"comments":0,"reposts":0,"followers":3332},{"date":"2026-07-15","impressions":138,"reactions":5,"comments":1,"reposts":0,"followers":3333},{"date":"2026-07-16","impressions":142,"reactions":5,"comments":1,"reposts":0,"followers":3334},{"date":"2026-07-17","impressions":145,"reactions":5,"comments":0,"reposts":0,"followers":3335},{"date":"2026-07-18","impressions":52,"reactions":2,"comments":0,"reposts":0,"followers":3335},{"date":"2026-07-19","impressions":55,"reactions":2,"comments":1,"reposts":0,"followers":3336},{"date":"2026-07-20","impressions":161,"reactions":6,"comments":0,"reposts":0,"followers":3337},{"date":"2026-07-21","impressions":164,"reactions":6,"comments":1,"reposts":0,"followers":3338},{"date":"2026-07-22","impressions":170,"reactions":7,"comments":1,"reposts":0,"followers":3339},{"date":"2026-07-23","impressions":176,"reactions":6,"comments":1,"reposts":1,"followers":3340},{"date":"2026-07-24","impressions":183,"reactions":7,"comments":0,"reposts":0,"followers":3341},{"date":"2026-07-25","impressions":65,"reactions":2,"comments":1,"reposts":0,"followers":3342},{"date":"2026-07-26","impressions":66,"reactions":3,"comments":0,"reposts":0,"followers":3343},{"date":"2026-07-27","impressions":192,"reactions":7,"comments":1,"reposts":0,"followers":3344},{"date":"2026-07-28","impressions":192,"reactions":7,"comments":1,"reposts":0,"followers":3345},{"date":"2026-07-29","impressions":193,"reactions":7,"comments":0,"reposts":0,"followers":3346},{"date":"2026-07-30","impressions":198,"reactions":7,"comments":1,"reposts":0,"followers":3347},{"date":"2026-07-31","impressions":202,"reactions":8,"comments":1,"reposts":0,"followers":3349},{"date":"2026-08-01","impressions":72,"reactions":2,"comments":1,"reposts":0,"followers":3349},{"date":"2026-08-02","impressions":72,"reactions":3,"comments":0,"reposts":0,"followers":3350},{"date":"2026-08-03","impressions":211,"reactions":8,"comments":1,"reposts":0,"followers":3351},{"date":"2026-08-04","impressions":216,"reactions":8,"comments":1,"reposts":0,"followers":3352},{"date":"2026-08-05","impressions":221,"reactions":8,"comments":1,"reposts":0,"followers":3353},{"date":"2026-08-06","impressions":222,"reactions":8,"comments":1,"reposts":1,"followers":3355},{"date":"2026-08-07","impressions":223,"reactions":8,"comments":1,"reposts":0,"followers":3356},{"date":"2026-08-08","impressions":77,"reactions":3,"comments":0,"reposts":0,"followers":3357},{"date":"2026-08-09","impressions":78,"reactions":3,"comments":0,"reposts":0,"followers":3358},{"date":"2026-08-10","impressions":230,"reactions":8,"comments":1,"reposts":0,"followers":3359},{"date":"2026-08-11","impressions":234,"reactions":9,"comments":1,"reposts":0,"followers":3360},{"date":"2026-08-12","impressions":237,"reactions":9,"comments":1,"reposts":0,"followers":3361},{"date":"2026-08-13","impressions":244,"reactions":9,"comments":2,"reposts":0,"followers":3363},{"date":"2026-08-14","impressions":245,"reactions":9,"comments":1,"reposts":0,"followers":3364},{"date":"2026-08-15","impressions":88,"reactions":3,"comments":0,"reposts":0,"followers":3365},{"date":"2026-08-16","impressions":90,"reactions":3,"comments":0,"reposts":0,"followers":3366},{"date":"2026-08-17","impressions":261,"reactions":10,"comments":2,"reposts":1,"followers":3368},{"date":"2026-08-18","impressions":263,"reactions":9,"comments":1,"reposts":0,"followers":3370},{"date":"2026-08-19","impressions":263,"reactions":10,"comments":1,"reposts":0,"followers":3371},{"date":"2026-08-20","impressions":264,"reactions":10,"comments":1,"reposts":0,"followers":3373},{"date":"2026-08-21","impressions":269,"reactions":10,"comments":1,"reposts":0,"followers":3375},{"date":"2026-08-22","impressions":96,"reactions":3,"comments":1,"reposts":0,"followers":3376},{"date":"2026-08-23","impressions":98,"reactions":4,"comments":0,"reposts":0,"followers":3377},{"date":"2026-08-24","impressions":284,"reactions":10,"comments":1,"reposts":0,"followers":3379},{"date":"2026-08-25","impressions":286,"reactions":11,"comments":2,"reposts":0,"followers":3380},{"date":"2026-08-26","impressions":287,"reactions":10,"comments":1,"reposts":1,"followers":3382},{"date":"2026-08-27","impressions":291,"reactions":11,"comments":1,"reposts":0,"followers":3384},{"date":"2026-08-28","impressions":297,"reactions":11,"comments":1,"reposts":0,"followers":3386},{"date":"2026-08-29","impressions":104,"reactions":4,"comments":1,"reposts":0,"followers":3387},{"date":"2026-08-30","impressions":105,"reactions":4,"comments":0,"reposts":0,"followers":3388},{"date":"2026-08-31","impressions":303,"reactions":11,"comments":2,"reposts":0,"followers":3390},{"date":"2026-09-01","impressions":307,"reactions":11,"comments":1,"reposts":0,"followers":3392},{"date":"2026-09-02","impressions":310,"reactions":12,"comments":1,"reposts":0,"followers":3394},{"date":"2026-09-03","impressions":310,"reactions":11,"comments":2,"reposts":0,"followers":3396},{"date":"2026-09-04","impressions":315,"reactions":11,"comments":1,"reposts":1,"followers":3398},{"date":"2026-09-05","impressions":111,"reactions":5,"comments":1,"reposts":0,"followers":3399},{"date":"2026-09-06","impressions":113,"reactions":4,"comments":0,"reposts":0,"followers":3401},{"date":"2026-09-07","impressions":327,"reactions":12,"comments":2,"reposts":0,"followers":3403},{"date":"2026-09-08","impressions":332,"reactions":12,"comments":1,"reposts":0,"followers":3405}],
+  website: [{"date":"2026-06-11","sessions":3,"users":2,"direct":2,"referral":1,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-12","sessions":4,"users":3,"direct":3,"referral":1,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-13","sessions":2,"users":2,"direct":1,"referral":0,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-14","sessions":1,"users":1,"direct":1,"referral":1,"organic_search":1,"other":0,"conversions":0},{"date":"2026-06-15","sessions":5,"users":4,"direct":3,"referral":1,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-16","sessions":5,"users":4,"direct":4,"referral":1,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-17","sessions":5,"users":4,"direct":3,"referral":2,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-18","sessions":7,"users":6,"direct":5,"referral":1,"organic_search":1,"other":0,"conversions":0},{"date":"2026-06-19","sessions":6,"users":5,"direct":4,"referral":2,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-20","sessions":3,"users":2,"direct":2,"referral":1,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-21","sessions":4,"users":3,"direct":2,"referral":0,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-22","sessions":8,"users":7,"direct":6,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-06-23","sessions":9,"users":7,"direct":6,"referral":2,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-24","sessions":9,"users":7,"direct":7,"referral":2,"organic_search":1,"other":0,"conversions":0},{"date":"2026-06-25","sessions":11,"users":9,"direct":7,"referral":3,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-26","sessions":10,"users":8,"direct":6,"referral":3,"organic_search":1,"other":1,"conversions":0},{"date":"2026-06-27","sessions":4,"users":3,"direct":3,"referral":1,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-28","sessions":4,"users":3,"direct":3,"referral":1,"organic_search":0,"other":0,"conversions":0},{"date":"2026-06-29","sessions":13,"users":11,"direct":9,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-06-30","sessions":12,"users":10,"direct":8,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-01","sessions":14,"users":11,"direct":10,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-02","sessions":14,"users":11,"direct":9,"referral":3,"organic_search":0,"other":0,"conversions":0},{"date":"2026-07-03","sessions":15,"users":12,"direct":10,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-04","sessions":6,"users":5,"direct":5,"referral":2,"organic_search":0,"other":0,"conversions":0},{"date":"2026-07-05","sessions":7,"users":6,"direct":4,"referral":2,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-06","sessions":17,"users":14,"direct":12,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-07","sessions":18,"users":15,"direct":12,"referral":5,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-08","sessions":18,"users":15,"direct":12,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-09","sessions":18,"users":15,"direct":13,"referral":5,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-10","sessions":18,"users":15,"direct":12,"referral":5,"organic_search":1,"other":1,"conversions":0},{"date":"2026-07-11","sessions":8,"users":7,"direct":5,"referral":2,"organic_search":0,"other":0,"conversions":0},{"date":"2026-07-12","sessions":7,"users":6,"direct":5,"referral":2,"organic_search":0,"other":0,"conversions":0},{"date":"2026-07-13","sessions":20,"users":16,"direct":13,"referral":5,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-14","sessions":20,"users":16,"direct":14,"referral":5,"organic_search":2,"other":0,"conversions":0},{"date":"2026-07-15","sessions":20,"users":16,"direct":14,"referral":5,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-16","sessions":22,"users":18,"direct":15,"referral":6,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-17","sessions":22,"users":18,"direct":15,"referral":5,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-18","sessions":9,"users":7,"direct":6,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-19","sessions":10,"users":8,"direct":7,"referral":2,"organic_search":0,"other":0,"conversions":0},{"date":"2026-07-20","sessions":24,"users":20,"direct":16,"referral":6,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-21","sessions":25,"users":21,"direct":17,"referral":7,"organic_search":2,"other":1,"conversions":0},{"date":"2026-07-22","sessions":25,"users":21,"direct":17,"referral":6,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-23","sessions":25,"users":21,"direct":17,"referral":7,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-24","sessions":25,"users":21,"direct":17,"referral":6,"organic_search":2,"other":0,"conversions":0},{"date":"2026-07-25","sessions":10,"users":8,"direct":7,"referral":3,"organic_search":0,"other":0,"conversions":0},{"date":"2026-07-26","sessions":11,"users":9,"direct":7,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-27","sessions":26,"users":21,"direct":18,"referral":6,"organic_search":1,"other":0,"conversions":0},{"date":"2026-07-28","sessions":26,"users":21,"direct":18,"referral":7,"organic_search":2,"other":0,"conversions":0},{"date":"2026-07-29","sessions":28,"users":23,"direct":19,"referral":7,"organic_search":1,"other":1,"conversions":0},{"date":"2026-07-30","sessions":28,"users":23,"direct":19,"referral":8,"organic_search":2,"other":0,"conversions":0},{"date":"2026-07-31","sessions":29,"users":24,"direct":20,"referral":7,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-01","sessions":12,"users":10,"direct":8,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-02","sessions":12,"users":10,"direct":8,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-03","sessions":30,"users":25,"direct":21,"referral":8,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-04","sessions":31,"users":25,"direct":21,"referral":8,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-05","sessions":32,"users":26,"direct":21,"referral":8,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-06","sessions":32,"users":26,"direct":22,"referral":8,"organic_search":1,"other":1,"conversions":0},{"date":"2026-08-07","sessions":33,"users":27,"direct":23,"referral":9,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-08","sessions":14,"users":11,"direct":9,"referral":3,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-09","sessions":13,"users":11,"direct":9,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-10","sessions":35,"users":29,"direct":24,"referral":9,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-11","sessions":36,"users":30,"direct":24,"referral":9,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-12","sessions":36,"users":30,"direct":25,"referral":10,"organic_search":2,"other":1,"conversions":0},{"date":"2026-08-13","sessions":37,"users":30,"direct":25,"referral":9,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-14","sessions":38,"users":31,"direct":26,"referral":10,"organic_search":3,"other":0,"conversions":0},{"date":"2026-08-15","sessions":15,"users":12,"direct":10,"referral":4,"organic_search":0,"other":0,"conversions":0},{"date":"2026-08-16","sessions":16,"users":13,"direct":11,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-17","sessions":39,"users":32,"direct":27,"referral":10,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-18","sessions":40,"users":33,"direct":27,"referral":10,"organic_search":2,"other":1,"conversions":0},{"date":"2026-08-19","sessions":40,"users":33,"direct":27,"referral":11,"organic_search":3,"other":0,"conversions":0},{"date":"2026-08-20","sessions":41,"users":34,"direct":28,"referral":10,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-21","sessions":42,"users":34,"direct":28,"referral":11,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-22","sessions":16,"users":13,"direct":12,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-23","sessions":17,"users":14,"direct":11,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-24","sessions":43,"users":35,"direct":29,"referral":11,"organic_search":2,"other":1,"conversions":0},{"date":"2026-08-25","sessions":43,"users":35,"direct":30,"referral":12,"organic_search":3,"other":0,"conversions":0},{"date":"2026-08-26","sessions":44,"users":36,"direct":30,"referral":11,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-27","sessions":45,"users":37,"direct":30,"referral":12,"organic_search":2,"other":0,"conversions":0},{"date":"2026-08-28","sessions":45,"users":37,"direct":31,"referral":11,"organic_search":3,"other":1,"conversions":0},{"date":"2026-08-29","sessions":18,"users":15,"direct":12,"referral":5,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-30","sessions":19,"users":16,"direct":13,"referral":5,"organic_search":1,"other":0,"conversions":0},{"date":"2026-08-31","sessions":46,"users":38,"direct":32,"referral":12,"organic_search":2,"other":0,"conversions":0},{"date":"2026-09-01","sessions":47,"users":39,"direct":31,"referral":12,"organic_search":3,"other":0,"conversions":0},{"date":"2026-09-02","sessions":47,"users":39,"direct":32,"referral":12,"organic_search":2,"other":1,"conversions":0},{"date":"2026-09-03","sessions":48,"users":39,"direct":33,"referral":12,"organic_search":3,"other":0,"conversions":0},{"date":"2026-09-04","sessions":48,"users":39,"direct":32,"referral":13,"organic_search":3,"other":0,"conversions":0},{"date":"2026-09-05","sessions":19,"users":16,"direct":13,"referral":4,"organic_search":1,"other":0,"conversions":0},{"date":"2026-09-06","sessions":19,"users":16,"direct":14,"referral":6,"organic_search":1,"other":0,"conversions":0},{"date":"2026-09-07","sessions":49,"users":40,"direct":33,"referral":12,"organic_search":2,"other":1,"conversions":0},{"date":"2026-09-08","sessions":50,"users":41,"direct":34,"referral":13,"organic_search":3,"other":0,"conversions":0}],
+  hubspot: [{"date":"2026-06-11","mql":0,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-12","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-06-13","mql":0,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-14","mql":0,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-15","mql":1,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-16","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-06-17","mql":0,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-18","mql":0,"sql":1,"opportunity":0,"customer":0},{"date":"2026-06-19","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-06-20","mql":0,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-21","mql":0,"sql":0,"opportunity":1,"customer":1},{"date":"2026-06-22","mql":1,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-23","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-06-24","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-06-25","mql":1,"sql":1,"opportunity":1,"customer":0},{"date":"2026-06-26","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-06-27","mql":0,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-28","mql":0,"sql":0,"opportunity":0,"customer":0},{"date":"2026-06-29","mql":1,"sql":0,"opportunity":1,"customer":0},{"date":"2026-06-30","mql":0,"sql":1,"opportunity":1,"customer":1},{"date":"2026-07-01","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-02","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-07-03","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-04","mql":1,"sql":1,"opportunity":0,"customer":0},{"date":"2026-07-05","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-06","mql":0,"sql":0,"opportunity":1,"customer":1},{"date":"2026-07-07","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-07-08","mql":1,"sql":1,"opportunity":1,"customer":0},{"date":"2026-07-09","mql":0,"sql":0,"opportunity":2,"customer":0},{"date":"2026-07-10","mql":1,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-11","mql":0,"sql":1,"opportunity":1,"customer":1},{"date":"2026-07-12","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-13","mql":1,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-14","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-07-15","mql":0,"sql":0,"opportunity":2,"customer":0},{"date":"2026-07-16","mql":1,"sql":0,"opportunity":2,"customer":1},{"date":"2026-07-17","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-07-18","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-19","mql":1,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-20","mql":0,"sql":1,"opportunity":2,"customer":1},{"date":"2026-07-21","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-07-22","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-07-23","mql":1,"sql":0,"opportunity":2,"customer":1},{"date":"2026-07-24","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-07-25","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-26","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-07-27","mql":1,"sql":1,"opportunity":2,"customer":1},{"date":"2026-07-28","mql":1,"sql":1,"opportunity":3,"customer":0},{"date":"2026-07-29","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-07-30","mql":1,"sql":1,"opportunity":3,"customer":1},{"date":"2026-07-31","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-08-01","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-08-02","mql":0,"sql":0,"opportunity":1,"customer":1},{"date":"2026-08-03","mql":1,"sql":1,"opportunity":3,"customer":0},{"date":"2026-08-04","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-08-05","mql":2,"sql":1,"opportunity":3,"customer":1},{"date":"2026-08-06","mql":1,"sql":1,"opportunity":3,"customer":0},{"date":"2026-08-07","mql":1,"sql":1,"opportunity":3,"customer":1},{"date":"2026-08-08","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-08-09","mql":0,"sql":0,"opportunity":1,"customer":0},{"date":"2026-08-10","mql":1,"sql":1,"opportunity":3,"customer":1},{"date":"2026-08-11","mql":2,"sql":1,"opportunity":3,"customer":0},{"date":"2026-08-12","mql":1,"sql":1,"opportunity":4,"customer":1},{"date":"2026-08-13","mql":1,"sql":0,"opportunity":3,"customer":0},{"date":"2026-08-14","mql":1,"sql":1,"opportunity":3,"customer":1},{"date":"2026-08-15","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-08-16","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-08-17","mql":1,"sql":1,"opportunity":3,"customer":1},{"date":"2026-08-18","mql":1,"sql":1,"opportunity":3,"customer":0},{"date":"2026-08-19","mql":2,"sql":0,"opportunity":4,"customer":1},{"date":"2026-08-20","mql":1,"sql":1,"opportunity":3,"customer":0},{"date":"2026-08-21","mql":1,"sql":1,"opportunity":3,"customer":1},{"date":"2026-08-22","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-08-23","mql":1,"sql":0,"opportunity":1,"customer":0},{"date":"2026-08-24","mql":1,"sql":1,"opportunity":4,"customer":1},{"date":"2026-08-25","mql":1,"sql":1,"opportunity":3,"customer":0},{"date":"2026-08-26","mql":1,"sql":0,"opportunity":4,"customer":1},{"date":"2026-08-27","mql":2,"sql":1,"opportunity":3,"customer":0},{"date":"2026-08-28","mql":1,"sql":1,"opportunity":3,"customer":1},{"date":"2026-08-29","mql":1,"sql":0,"opportunity":2,"customer":0},{"date":"2026-08-30","mql":0,"sql":1,"opportunity":1,"customer":0},{"date":"2026-08-31","mql":2,"sql":1,"opportunity":4,"customer":1},{"date":"2026-09-01","mql":1,"sql":0,"opportunity":3,"customer":0},{"date":"2026-09-02","mql":2,"sql":1,"opportunity":4,"customer":1},{"date":"2026-09-03","mql":1,"sql":1,"opportunity":4,"customer":1},{"date":"2026-09-04","mql":1,"sql":1,"opportunity":3,"customer":0},{"date":"2026-09-05","mql":1,"sql":1,"opportunity":2,"customer":0},{"date":"2026-09-06","mql":1,"sql":0,"opportunity":2,"customer":1},{"date":"2026-09-07","mql":1,"sql":1,"opportunity":4,"customer":0},{"date":"2026-09-08","mql":2,"sql":1,"opportunity":4,"customer":1}]
+};
+
+/* ============================== state ============================== */
+const state = {
+  range: "30",
+  customStart: null,
+  customEnd: null,
+  data: { instantly: null, linkedin: null, website: null, hubspot: null },
+  isSample: { instantly: true, linkedin: true, website: true, hubspot: true },
+  lastSync: { instantly: null, linkedin: null, website: null, hubspot: null }
+};
+
+function filteredRange(){
+  if(state.range === "all") return { start: null, end: null };
+  if(state.range === "custom" && state.customStart && state.customEnd){
+    return { start: state.customStart, end: state.customEnd };
+  }
+  const days = parseInt(state.range, 10) || 30;
+  return { start: fmtDate(addDays(TODAY, -(days-1))), end: fmtDate(TODAY) };
+}
+function filterRows(rows){
+  const {start,end} = filteredRange();
+  if(!start) return rows;
+  return rows.filter(r => r.date >= start && r.date <= end);
+}
+function prevPeriodRows(rows){
+  const {start,end} = filteredRange();
+  if(!start) return [];
+  const s = new Date(start+"T00:00:00"), e = new Date(end+"T00:00:00");
+  const span = Math.round((e-s)/86400000)+1;
+  const prevEnd = fmtDate(addDays(s,-1));
+  const prevStart = fmtDate(addDays(s,-span));
+  return rows.filter(r => r.date >= prevStart && r.date <= prevEnd);
+}
+function sum(rows, key){ return rows.reduce((a,r)=>a+(r[key]||0),0); }
+
+/* ============================== db wiring ============================== */
+let db = null;
+async function initData(){
+  try{
+    db = (window.claude && window.claude.use) ? await window.claude.use("db") : null;
+  }catch(e){ db = null; }
+
+  const sources = [
+    {key:"instantly", coll:"instantly_daily"},
+    {key:"linkedin", coll:"linkedin_daily"},
+    {key:"website", coll:"website_daily"},
+    {key:"hubspot", coll:"hubspot_daily"}
+  ];
+
+  for(const s of sources){
+    state.data[s.key] = SAMPLE[s.key];
+    state.isSample[s.key] = true;
+  }
+
+  if(db){
+    for(const s of sources){
+      try{
+        const snap = await db.collection(s.coll).orderBy("date","asc").limit(400).get();
+        if(!snap.empty){
+          const rows = snap.docs.map(d=>d.data());
+          state.data[s.key] = rows;
+          state.isSample[s.key] = false;
+        }
+      }catch(e){ /* keep sample */ }
+    }
+    try{
+      const meta = await db.collection("meta").doc("status").get();
+      if(meta.exists){ state.lastSync = Object.assign({}, state.lastSync, meta.data()); }
+    }catch(e){}
+  }
+
+  render();
+}
+
+/* ============================== chart primitives ============================== */
+function sparkPath(values, w, h, pad){
+  pad = pad || 2;
+  if(values.length < 2) return "";
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max-min) || 1;
+  const step = (w-pad*2) / (values.length-1);
+  return values.map((v,i)=>{
+    const x = pad + i*step;
+    const y = pad + (h-pad*2) * (1 - (v-min)/range);
+    return (i===0?"M":"L") + x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
+}
+
+function lineChart(container, rows, key, opts){
+  opts = opts || {};
+  const w = 520, h = 168, padL = 34, padR = 10, padT = 12, padB = 22;
+  const values = rows.map(r=>r[key]);
+  const dates = rows.map(r=>r.date);
+  const min = 0;
+  const rawMax = Math.max(...values);
+  const max = (rawMax > 0 ? rawMax : 1) * 1.15;
+  const innerW = w - padL - padR, innerH = h - padT - padB;
+  const x = i => padL + (rows.length<=1?0:(innerW * i/(rows.length-1)));
+  const y = v => padT + innerH * (1 - (v-min)/(max-min));
+
+  const linePath = values.map((v,i)=> (i===0?"M":"L") + x(i).toFixed(1)+","+y(v).toFixed(1)).join(" ");
+  const areaPath = linePath + ` L${x(values.length-1).toFixed(1)},${(padT+innerH).toFixed(1)} L${x(0).toFixed(1)},${(padT+innerH).toFixed(1)} Z`;
+
+  const gridYs = [0, 0.5, 1].map(f => padT + innerH*f);
+  const gridVals = [max, max/2, 0];
+
+  const nTicks = Math.min(5, rows.length);
+  const tickIdxs = Array.from({length:nTicks}, (_,i)=> Math.round(i*(rows.length-1)/(nTicks-1||1)));
+
+  const uid = "g"+Math.random().toString(36).slice(2,8);
+  const color = opts.color || "var(--accent-line)";
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${opts.ariaLabel||''}">
+      <defs>
+        <linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${color}" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${gridYs.map((gy,i)=>`<line class="grid-line" x1="${padL}" x2="${w-padR}" y1="${gy}" y2="${gy}"/>
+        <text class="axis-label" x="${padL-6}" y="${gy+3}" text-anchor="end">${opts.fmt ? opts.fmt(gridVals[i]) : fmtInt(gridVals[i])}</text>`).join("")}
+      ${tickIdxs.map(i=>`<text class="axis-label" x="${x(i)}" y="${h-6}" text-anchor="middle">${fmtShort(dates[i])}</text>`).join("")}
+      <path d="${areaPath}" fill="url(#${uid})" stroke="none"/>
+      <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <line class="crosshair" id="${uid}-cross" x1="0" x2="0" y1="${padT}" y2="${padT+innerH}"/>
+      <circle class="hover-dot" id="${uid}-dot" r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"/>
+      <rect x="${padL}" y="${padT}" width="${innerW}" height="${innerH}" fill="transparent" id="${uid}-capture" style="cursor:crosshair"/>
+    </svg>`;
+
+  const svg = container.querySelector("svg");
+  const capture = svg.querySelector(`#${uid}-capture`);
+  const cross = svg.querySelector(`#${uid}-cross`);
+  const dot = svg.querySelector(`#${uid}-dot`);
+  const tooltip = document.getElementById("tooltip");
+
+  capture.addEventListener("mousemove", (e)=>{
+    const rect = svg.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (w/rect.width);
+    let idx = Math.round((px - padL) / (innerW/(rows.length-1||1)));
+    idx = clamp(idx, 0, rows.length-1);
+    const vx = x(idx), vy = y(values[idx]);
+    cross.setAttribute("x1", vx); cross.setAttribute("x2", vx);
+    cross.style.opacity = 1; dot.style.opacity = 1;
+    dot.setAttribute("cx", vx); dot.setAttribute("cy", vy);
+    tooltip.style.opacity = 1;
+    tooltip.style.left = (rect.left + vx*(rect.width/w) + window.scrollX) + "px";
+    tooltip.style.top = (rect.top + vy*(rect.height/h) + window.scrollY) + "px";
+    tooltip.innerHTML = `${fmtShort(dates[idx])}<br><b>${opts.fmt ? opts.fmt(values[idx]) : fmtInt(values[idx])}</b>${opts.label ? " "+opts.label : ""}`;
+  });
+  capture.addEventListener("mouseleave", ()=>{
+    cross.style.opacity = 0; dot.style.opacity = 0; tooltip.style.opacity = 0;
+  });
+}
+
+function channelBreakdown(container, totals){
+  const entries = [
+    {label:"Direct", value: totals.direct, color:"var(--cat-1)"},
+    {label:"Referral", value: totals.referral, color:"var(--cat-4)"},
+    {label:"Organic search", value: totals.organic_search, color:"var(--cat-3)"},
+    {label:"Other", value: totals.other, color:"var(--cat-2)"}
+  ];
+  const total = entries.reduce((a,e)=>a+e.value,0) || 1;
+  container.innerHTML = `
+    <div style="display:flex; height:14px; border-radius:7px; overflow:hidden; gap:2px;">
+      ${entries.map(e=>`<div style="flex:${Math.max(e.value,1)}; background:${e.color};" title="${e.label}"></div>`).join("")}
+    </div>
+    <div class="legend" style="margin-top:10px;">
+      ${entries.map(e=>`<span class="legend-item"><span class="legend-swatch" style="background:${e.color}"></span>${e.label} · ${fmtPct(e.value/total,0)}</span>`).join("")}
+    </div>`;
+}
+
+function drawFunnel(container, totals){
+  const stages = [
+    {key:"mql", name:"MQL", color:"var(--ord-1)"},
+    {key:"sql", name:"SQL", color:"var(--ord-2)"},
+    {key:"opportunity", name:"Opportunity", color:"var(--ord-3)"},
+    {key:"customer", name:"Customer", color:"var(--ord-4)"}
+  ];
+  const max = totals[stages[0].key] || 1;
+  let html = `<div class="funnel">`;
+  stages.forEach((s,i)=>{
+    const val = totals[s.key] || 0;
+    const pct = clamp(val/max, 0.06, 1);
+    html += `<div class="funnel-row">
+      <div class="funnel-name">${s.name}</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:${(pct*100).toFixed(1)}%; background:${s.color};"><span>${fmtInt(val)}</span></div></div>
+      <div class="funnel-conv">${i===0?"·":fmtPct(val/(totals[stages[i-1].key]||1),0)}</div>
+    </div>`;
+    if(i < stages.length-1) html += `<div class="funnel-arrow">↓</div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+/* ============================== KPI band ============================== */
+function kpiTile(label, value, deltaPct, values, color){
+  const up = deltaPct >= 0;
+  const w = 84, h = 30;
+  return `<div class="kpi-tile">
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value tabular">${value}</div>
+    <div class="kpi-row">
+      <div class="kpi-delta ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(deltaPct*100).toFixed(1)}% vs prior period</div>
+      <svg class="kpi-spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+        <path d="${sparkPath(values, w, h)}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>`;
+}
+
+function pctDelta(curr, prev){
+  if(!prev) return 0;
+  return (curr-prev)/prev;
+}
+
+/* ============================== render ============================== */
+function render(){
+  renderSyncLine();
+  renderKpis();
+  renderModules();
+  const anySample = Object.values(state.isSample).some(Boolean);
+  document.getElementById("sampleBanner").hidden = !anySample;
+}
+
+function renderSyncLine(){
+  const labels = {instantly:"Instantly", linkedin:"LinkedIn", website:"Website (GA4)", hubspot:"HubSpot"};
+  const divider = '<span style="width:1px;height:12px;background:var(--border);display:inline-block;margin:0 2px;"></span>';
+  const parts = Object.keys(labels).map(k=>
+    `<span class="sync-line"><span class="dot ${state.isSample[k]?'sample':''}"></span> ${labels[k]} · ${state.isSample[k] ? ('snapshot '+fmtShort(SNAPSHOT_DATE)) : ('synced' + (state.lastSync[k]?(' '+state.lastSync[k]):''))}</span>`
+  );
+  document.getElementById("syncLine").innerHTML = parts.join(divider);
+  const note = document.getElementById("snapshotNote");
+  if(note) note.textContent = SNAPSHOT_NOTE;
+}
+
+function renderKpis(){
+  const i = filterRows(state.data.instantly), ip = prevPeriodRows(state.data.instantly);
+  const l = filterRows(state.data.linkedin), lp = prevPeriodRows(state.data.linkedin);
+  const w = filterRows(state.data.website), wp = prevPeriodRows(state.data.website);
+  const h = filterRows(state.data.hubspot), hp = prevPeriodRows(state.data.hubspot);
+
+  const iReply = sum(i,"replies")/Math.max(sum(i,"sent"),1);
+  const iReplyPrev = sum(ip,"replies")/Math.max(sum(ip,"sent"),1);
+  const lEng = sum(l,"reactions")+sum(l,"comments")+sum(l,"reposts");
+  const lEngRate = lEng/Math.max(sum(l,"impressions"),1);
+  const lEngPrev = (sum(lp,"reactions")+sum(lp,"comments")+sum(lp,"reposts"))/Math.max(sum(lp,"impressions"),1);
+  const wConv = sum(w,"conversions")/Math.max(sum(w,"sessions"),1);
+  const wConvPrev = sum(wp,"conversions")/Math.max(sum(wp,"sessions"),1);
+  const hConv = sum(h,"sql")/Math.max(sum(h,"mql"),1);
+  const hConvPrev = sum(hp,"sql")/Math.max(sum(hp,"mql"),1);
+
+  const grid = document.getElementById("kpiGrid");
+  grid.innerHTML =
+    kpiTile("Instantly reply rate", fmtPct(iReply), pctDelta(iReply,iReplyPrev), i.map(r=>r.replies/Math.max(r.sent,1)), "var(--lime)") +
+    kpiTile("LinkedIn engagement rate", fmtPct(lEngRate), pctDelta(lEngRate,lEngPrev), l.map(r=>(r.reactions+r.comments+r.reposts)/Math.max(r.impressions,1)), "var(--lime)") +
+    kpiTile("Website conversion rate", fmtPct(wConv), pctDelta(wConv,wConvPrev), w.map(r=>r.conversions/Math.max(r.sessions,1)), "var(--lime)") +
+    kpiTile("MQL → SQL conversion", fmtPct(hConv), pctDelta(hConv,hConvPrev), h.map(r=>r.sql/Math.max(r.mql,1)), "var(--lime)");
+}
+
+function renderModules(){
+  const root = document.getElementById("modules");
+  root.innerHTML = `
+    <div class="module" id="mod-instantly"></div>
+    <div class="module" id="mod-linkedin"></div>
+    <div class="module" id="mod-website"></div>
+    <div class="module" id="mod-hubspot"></div>
+  `;
+  renderInstantly(document.getElementById("mod-instantly"));
+  renderLinkedin(document.getElementById("mod-linkedin"));
+  renderWebsite(document.getElementById("mod-website"));
+  renderHubspot(document.getElementById("mod-hubspot"));
+}
+
+function statusPillHtml(key){
+  const sample = state.isSample[key];
+  return `<span class="status-pill ${sample?'sample':''}"><span class="dot"></span>${sample?('Snapshot '+fmtShort(SNAPSHOT_DATE)):'Live sync'}</span>`;
+}
+
+function renderInstantly(el){
+  const rows = filterRows(state.data.instantly);
+  const sent = sum(rows,"sent"), opens = sum(rows,"opens"), replies = sum(rows,"replies");
+  const opportunities = sum(rows,"opportunities"), pipeline = sum(rows,"pipeline");
+  el.innerHTML = `
+    <div class="module-head">
+      <div class="module-id">
+        <div class="chip forest">»</div>
+        <div><div class="eyebrow">Outbound · Instantly</div><div class="module-title">Cold email campaigns</div></div>
+      </div>
+      ${statusPillHtml("instantly")}
+    </div>
+    <div class="headline-metric"><span class="val tabular">${fmtPct(replies/Math.max(sent,1))}</span><span class="cap">reply rate · ${fmtInt(sent)} emails sent</span></div>
+    <div class="chart-box" id="instantly-chart"></div>
+    <div class="stat-row">
+      <div class="stat"><div class="n tabular">${fmtPct(opens/Math.max(sent,1))}</div><div class="l">Open rate</div></div>
+      <div class="stat"><div class="n tabular">${fmtInt(opportunities)}</div><div class="l">Opportunities</div></div>
+      <div class="stat"><div class="n tabular">$${fmtInt(pipeline)}</div><div class="l">Pipeline value</div></div>
+    </div>
+    <div class="upload-note">API sync: Instantly campaign analytics v2. Connect once, updates daily.</div>
+  `;
+  const daily = rows.map(r=>({date:r.date, rate: r.sent ? r.replies/r.sent : 0}));
+  lineChart(document.getElementById("instantly-chart"), daily, "rate", {color:"var(--accent-line)", fmt:v=>fmtPct(v,1), ariaLabel:"Instantly daily reply rate", label:"reply rate"});
+}
+
+function renderLinkedin(el){
+  const rows = filterRows(state.data.linkedin);
+  const impressions = sum(rows,"impressions"), eng = sum(rows,"reactions")+sum(rows,"comments")+sum(rows,"reposts");
+  const followerStart = rows.length ? rows[0].followers : 0;
+  const followerEnd = rows.length ? rows[rows.length-1].followers : 0;
+  el.innerHTML = `
+    <div class="module-head">
+      <div class="module-id">
+        <div class="chip forest">»</div>
+        <div><div class="eyebrow">Social · LinkedIn</div><div class="module-title">Company page performance</div></div>
+      </div>
+      ${statusPillHtml("linkedin")}
+    </div>
+    <div class="headline-metric"><span class="val tabular">${fmtPct(eng/Math.max(impressions,1))}</span><span class="cap">engagement rate · ${fmtInt(impressions)} impressions</span></div>
+    <div class="chart-box" id="linkedin-chart"></div>
+    <div class="stat-row">
+      <div class="stat"><div class="n tabular">+${fmtInt(followerEnd-followerStart)}</div><div class="l">New followers</div></div>
+      <div class="stat"><div class="n tabular">${fmtInt(sum(rows,"reactions")+sum(rows,"comments"))}</div><div class="l">Reactions + comments</div></div>
+      <div class="stat"><div class="n tabular">${fmtInt(sum(rows,"reposts"))}</div><div class="l">Reposts</div></div>
+    </div>
+    <div class="upload-zone" id="li-upload">
+      <input type="file" id="li-file" accept=".csv">
+      <div class="upload-title">⭱ Drop your LinkedIn analytics CSV here</div>
+      <div class="upload-sub">Page analytics → Export → paste the file. No self-serve API exists for company pages, so this stays manual.</div>
+    </div>
+  `;
+  const daily = rows.map(r=>({date:r.date, value:r.impressions}));
+  lineChart(document.getElementById("linkedin-chart"), daily, "value", {color:"var(--accent-line)", fmt:v=>fmtInt(v), ariaLabel:"LinkedIn daily impressions", label:"impressions"});
+
+  const zone = document.getElementById("li-upload");
+  const input = document.getElementById("li-file");
+  zone.addEventListener("click", ()=> input.click());
+  ["dragenter","dragover"].forEach(evt=> zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.add("dragover"); }));
+  ["dragleave","drop"].forEach(evt=> zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.remove("dragover"); }));
+  zone.addEventListener("drop", e=>{ if(e.dataTransfer.files[0]) handleLinkedinCsv(e.dataTransfer.files[0]); });
+  input.addEventListener("change", e=>{ if(e.target.files[0]) handleLinkedinCsv(e.target.files[0]); });
+}
+
+function renderWebsite(el){
+  const rows = filterRows(state.data.website);
+  const sessions = sum(rows,"sessions"), conv = sum(rows,"conversions");
+  el.innerHTML = `
+    <div class="module-head">
+      <div class="module-id">
+        <div class="chip forest">»</div>
+        <div><div class="eyebrow">Website · GA4</div><div class="module-title">Site traffic &amp; conversion</div></div>
+      </div>
+      ${statusPillHtml("website")}
+    </div>
+    <div class="headline-metric"><span class="val tabular">${fmtInt(sessions)}</span><span class="cap">sessions · ${fmtPct(conv/Math.max(sessions,1))} convert</span></div>
+    <div class="chart-box" id="website-chart"></div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px;">Traffic by channel</div>
+      <div id="website-channels"></div>
+    </div>
+    <div class="upload-note">API sync: Google Analytics 4 Data API (replaces the current Looker Studio export).</div>
+  `;
+  const daily = rows.map(r=>({date:r.date, value:r.sessions}));
+  lineChart(document.getElementById("website-chart"), daily, "value", {color:"var(--accent-line)", fmt:v=>fmtInt(v), ariaLabel:"Website daily sessions", label:"sessions"});
+  channelBreakdown(document.getElementById("website-channels"), {
+    direct: sum(rows,"direct"), referral: sum(rows,"referral"),
+    organic_search: sum(rows,"organic_search"), other: sum(rows,"other")
+  });
+}
+
+function renderHubspot(el){
+  const rows = filterRows(state.data.hubspot);
+  const totals = {mql: sum(rows,"mql"), sql: sum(rows,"sql"), opportunity: sum(rows,"opportunity"), customer: sum(rows,"customer")};
+  el.innerHTML = `
+    <div class="module-head">
+      <div class="module-id">
+        <div class="chip forest">»</div>
+        <div><div class="eyebrow">Pipeline · HubSpot</div><div class="module-title">Lead qualification funnel</div></div>
+      </div>
+      ${statusPillHtml("hubspot")}
+    </div>
+    <div class="headline-metric"><span class="val tabular">${fmtInt(totals.mql)}</span><span class="cap">MQLs in range · ${fmtPct(totals.customer/Math.max(totals.mql,1))} become customers</span></div>
+    <div id="hubspot-funnel"></div>
+    <div class="chart-box" id="hubspot-chart"></div>
+    <div class="upload-note">Direct connector: HubSpot CRM lifecycle stages, no API key handling needed.</div>
+  `;
+  drawFunnel(document.getElementById("hubspot-funnel"), totals);
+  const daily = rows.map(r=>({date:r.date, value:r.mql}));
+  lineChart(document.getElementById("hubspot-chart"), daily, "value", {color:"var(--accent-line)", fmt:v=>fmtInt(v), ariaLabel:"New MQLs per day", label:"new MQLs"});
+}
+
+/* ============================== CSV upload (LinkedIn) ============================== */
+function parseCsv(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+  if(!lines.length) return [];
+  const splitLine = l => l.match(/(".*?"|[^,]+)(?=,|$)/g).map(c=>c.replace(/^"|"$/g,"").trim());
+  const headers = splitLine(lines[0]).map(h=>h.toLowerCase());
+  return lines.slice(1).map(l=>{
+    const cells = splitLine(l);
+    const row = {};
+    headers.forEach((h,i)=> row[h] = cells[i]);
+    return row;
+  });
+}
+function pickCol(row, candidates){
+  for(const c of candidates){ if(row[c] !== undefined) return row[c]; }
+  return undefined;
+}
+function toNumber(v){
+  if(v==null) return 0;
+  const n = parseFloat(String(v).replace(/[, %]/g,""));
+  return isNaN(n) ? 0 : n;
+}
+function parseAnyDate(v){
+  if(!v) return null;
+  const d = new Date(v);
+  if(!isNaN(d)) return fmtDate(d);
+  return null;
+}
+
+async function handleLinkedinCsv(file){
+  const text = await file.text();
+  const raw = parseCsv(text);
+  const rows = raw.map(r=>{
+    const date = parseAnyDate(pickCol(r, ["date","day"]));
+    if(!date) return null;
+    return {
+      date,
+      impressions: toNumber(pickCol(r, ["impressions","impression count"])),
+      reactions: toNumber(pickCol(r, ["reactions","likes"])),
+      comments: toNumber(pickCol(r, ["comments"])),
+      reposts: toNumber(pickCol(r, ["reposts","shares"])),
+      followers: toNumber(pickCol(r, ["followers","total followers","new followers"]))
+    };
+  }).filter(Boolean);
+
+  if(!rows.length){
+    alert("No rows recognized. Expected columns like Date, Impressions, Reactions, Comments, Reposts, Followers. Export straight from LinkedIn's analytics, then Export.");
+    return;
+  }
+
+  if(db){
+    try{
+      for(const row of rows){
+        await db.collection("linkedin_daily").doc(row.date).set(row);
+      }
+      await db.collection("meta").doc("status").set(Object.assign({}, state.lastSync, {linkedin: fmtDate(new Date())}));
+    }catch(e){ /* fall through to local merge */ }
+  }
+
+  const merged = state.data.linkedin.filter(r => !rows.find(nr=>nr.date===r.date)).concat(rows).sort((a,b)=>a.date<b.date?-1:1);
+  state.data.linkedin = merged;
+  state.isSample.linkedin = false;
+  state.lastSync.linkedin = fmtDate(new Date());
+  render();
+}
+
+/* ============================== export ============================== */
+async function exportCsv(){
+  const {start,end} = filteredRange();
+  const rows = [];
+  const push = (source, arr, keys) => filterRows(arr).forEach(r => rows.push(Object.assign({source}, Object.fromEntries(keys.map(k=>[k, r[k]])))));
+  const lines = ["source,date,metric,value"];
+  function flat(source, arr, keys){
+    filterRows(arr).forEach(r=> keys.forEach(k=> lines.push(`${source},${r.date},${k},${r[k]}`)));
+  }
+  flat("instantly", state.data.instantly, ["sent","opens","replies","opportunities","pipeline"]);
+  flat("linkedin", state.data.linkedin, ["impressions","reactions","comments","reposts","followers"]);
+  flat("website", state.data.website, ["sessions","users","direct","referral","organic_search","other","conversions"]);
+  flat("hubspot", state.data.hubspot, ["mql","sql","opportunity","customer"]);
+  const csv = lines.join("\n");
+
+  try{
+    const downloads = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+    if(downloads){
+      await downloads.save({filename: `scalestack-growth-${start||"all"}_to_${end||"now"}.csv`, data: csv});
+      return;
+    }
+  }catch(e){}
+  // fallback: open as data URI in a new tab if downloads capability isn't available
+  const w = window.open();
+  if(w){ w.document.write("<pre>"+escapeHtml(csv)+"</pre>"); }
+}
+
+/* ============================== controls wiring ============================== */
+document.querySelectorAll(".range-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".range-btn").forEach(b=>b.setAttribute("aria-pressed","false"));
+    btn.setAttribute("aria-pressed","true");
+    state.range = btn.dataset.range;
+    document.getElementById("customRange").classList.toggle("show", state.range==="custom");
+    if(state.range === "custom" && !state.customStart){
+      state.customStart = fmtDate(addDays(TODAY,-30));
+      state.customEnd = fmtDate(TODAY);
+      document.getElementById("rangeStart").value = state.customStart;
+      document.getElementById("rangeEnd").value = state.customEnd;
+    }
+    render();
+  });
+});
+document.getElementById("rangeStart").addEventListener("change", e=>{ state.customStart = e.target.value; render(); });
+document.getElementById("rangeEnd").addEventListener("change", e=>{ state.customEnd = e.target.value; render(); });
+document.getElementById("exportBtn").addEventListener("click", exportCsv);
+
+initData();
+})();
+</script>
+
+</body>
+</html>
