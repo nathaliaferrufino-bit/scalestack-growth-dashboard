@@ -235,6 +235,55 @@
     border:1px solid var(--border); border-radius:8px; padding:5px 7px;
   }
 
+
+  /* ---------- rb2b visitors ---------- */
+  .section-head{
+    margin-top:34px; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .section-title{ font-family:"Manrope"; font-weight:800; font-size:19px; letter-spacing:-0.01em; margin-top:3px; }
+  .section-note{ font-size:12px; color:var(--muted); max-width:460px; }
+  .section-head + .modules{ margin-top:14px; }
+  .head-actions{ display:flex; align-items:center; gap:8px; min-width:0; }
+  .head-actions .status-pill{ min-width:0; }
+  .pill-text{ max-width:120px; overflow:hidden; text-overflow:ellipsis; }
+  .text-btn{
+    border:none; background:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer;
+    padding:4px 2px; text-decoration:underline; text-underline-offset:2px;
+  }
+  .text-btn:hover{ color:var(--ink); }
+  .text-btn:focus-visible{ outline:2px solid var(--accent-line); outline-offset:2px; border-radius:4px; }
+  .empty-state{ font-size:12.5px; color:var(--muted); background:var(--surface-2); border-radius:10px; padding:12px 14px; }
+  #rb2bModules > .module{ min-width:0; } /* let wide tables scroll inside the card instead of stretching the grid */
+  .table-wrap{ max-height:340px; overflow:auto; border:1px solid var(--border-soft); border-radius:10px; }
+  table.visitors{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.visitors th{
+    position:sticky; top:0; background:var(--surface-2); text-align:left; font-weight:500;
+    font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    padding:8px 10px; white-space:nowrap;
+  }
+  table.visitors td{ padding:8px 10px; border-top:1px solid var(--border-soft); vertical-align:top; }
+  table.visitors .num{ text-align:right; font-family:"IBM Plex Mono"; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  table.visitors .strong{ font-weight:700; }
+  table.visitors .sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+  table.visitors a{ text-decoration:none; }
+  .fit{
+    display:inline-flex; align-items:center; gap:4px; white-space:nowrap; cursor:help;
+    font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:.04em; text-transform:uppercase;
+    border-radius:5px; padding:2px 6px; border:1px solid transparent;
+  }
+  .fit b{ font-weight:500; opacity:.75; }
+  .fit.strong{ background:var(--lime); color:var(--lime-ink); }
+  .fit.good{ background:var(--accent-line-soft); color:var(--ink); }
+  .fit.weak{ background:var(--surface-2); color:var(--ink-2); }
+  .fit.skip{ color:var(--muted); border-color:var(--border); }
+  .table-tools{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); margin-bottom:-6px; }
+  .hot-tag{
+    font-family:"IBM Plex Mono"; font-size:9.5px; font-weight:500; letter-spacing:.06em; text-transform:uppercase;
+    background:var(--lime); color:var(--lime-ink); border-radius:5px; padding:1px 5px; margin-left:4px; vertical-align:1px;
+  }
+  table.visitors a:hover{ text-decoration:underline; }
+  @media (max-width:700px){ table.visitors .hide-sm{ display:none; } }
+
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
 </style>
 </head>
@@ -281,6 +330,15 @@
 
 <div class="wrap">
   <div class="modules" id="modules"></div>
+
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">Website visitors · RB2B</div>
+      <div class="section-title">Who's on the site</div>
+    </div>
+    <div class="section-note">Drop in an RB2B export to see who visited. A combined report fills both cards at once. Rows are ranked by Scalestack ICP fit (company size, industry, buyer persona, engagement) and clear non-fits are hidden. Files stay in your browser only: nothing is uploaded or saved, and it clears when you reload.</div>
+  </div>
+  <div class="modules" id="rb2bModules"></div>
 
   <div class="sample-banner" id="sampleBanner" hidden>
     <span>◐</span>
@@ -337,7 +395,9 @@ const state = {
   customEnd: null,
   data: { instantly: null, linkedin: null, website: null, hubspot: null },
   isSample: { instantly: true, linkedin: true, website: true, hubspot: true },
-  lastSync: { instantly: null, linkedin: null, website: null, hubspot: null }
+  lastSync: { instantly: null, linkedin: null, website: null, hubspot: null },
+  // RB2B uploads live in memory only (person-level data never gets persisted)
+  rb2b: { companies: null, people: null, companiesFile: null, peopleFile: null, showSkip: { companies: false, people: false } }
 };
 
 function filteredRange(){
@@ -550,6 +610,7 @@ function render(){
   renderSyncLine();
   renderKpis();
   renderModules();
+  renderRb2b();
   const anySample = Object.values(state.isSample).some(Boolean);
   document.getElementById("sampleBanner").hidden = !anySample;
 }
@@ -721,19 +782,41 @@ function renderHubspot(el){
 
 /* ============================== CSV upload (LinkedIn) ============================== */
 function parseCsv(text){
-  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
-  if(!lines.length) return [];
-  const splitLine = l => l.match(/(".*?"|[^,]+)(?=,|$)/g).map(c=>c.replace(/^"|"$/g,"").trim());
-  const headers = splitLine(lines[0]).map(h=>h.toLowerCase());
-  return lines.slice(1).map(l=>{
-    const cells = splitLine(l);
-    const row = {};
-    headers.forEach((h,i)=> row[h] = cells[i]);
-    return row;
+  // RFC 4180-ish: quoted fields, escaped quotes, commas/newlines inside quotes, empty cells
+  text = text.replace(/^\uFEFF/, "");
+  const records = [];
+  let row = [], field = "", inQuotes = false;
+  for(let i=0; i<text.length; i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if(c === '"') inQuotes = true;
+    else if(c === ","){ row.push(field); field = ""; }
+    else if(c === "\n" || c === "\r"){
+      if(c === "\r" && text[i+1] === "\n") i++;
+      row.push(field); field = "";
+      records.push(row); row = [];
+    } else field += c;
+  }
+  if(field.length || row.length){ row.push(field); records.push(row); }
+  const nonEmpty = records.filter(r => r.some(c => c.trim().length));
+  if(!nonEmpty.length) return [];
+  const headers = nonEmpty[0].map(h=>h.trim().toLowerCase());
+  return nonEmpty.slice(1).map(cells=>{
+    const out = {};
+    headers.forEach((h,i)=> out[h] = cells[i] == null ? "" : cells[i].trim());
+    return out;
   });
 }
+function normKey(k){ return String(k).toLowerCase().replace(/[^a-z0-9]/g,""); }
 function pickCol(row, candidates){
   for(const c of candidates){ if(row[c] !== undefined) return row[c]; }
+  // Fallback ignores case, spaces and punctuation, so "LastSeenAt" matches "last seen at"
+  const keys = Object.keys(row).reduce((m,k)=>{ m[normKey(k)] = k; return m; }, {});
+  for(const c of candidates){ const k = keys[normKey(c)]; if(k !== undefined) return row[k]; }
   return undefined;
 }
 function toNumber(v){
@@ -783,6 +866,375 @@ async function handleLinkedinCsv(file){
   state.isSample.linkedin = false;
   state.lastSync.linkedin = fmtDate(new Date());
   render();
+}
+
+/* ============================== CSV upload (RB2B) ============================== */
+function textCol(row, candidates){
+  const v = pickCol(row, candidates);
+  return v == null ? "" : String(v).trim();
+}
+function cleanDomain(v){
+  return String(v||"").trim().toLowerCase().replace(/^https?:\/\//,"").replace(/^www\./,"").replace(/\/.*$/,"");
+}
+function safeUrl(v){
+  v = String(v||"").trim();
+  if(!v) return "";
+  if(!/^https?:\/\//i.test(v)) v = "https://" + v;
+  return /^https?:\/\/[^\s"'<>]+$/i.test(v) ? v : "";
+}
+function pathOf(url){
+  try{ const u = new URL(safeUrl(url)); return u.pathname + (u.search||""); }catch(e){ return url || ""; }
+}
+function firstUrl(v){
+  v = String(v||"").trim();
+  if(v.startsWith("[")){ try{ const arr = JSON.parse(v); return arr.length ? String(arr[0]) : ""; }catch(e){ return ""; } }
+  return v;
+}
+function listCol(row, candidates){
+  const v = String(pickCol(row, candidates) || "").trim();
+  if(!v) return [];
+  if(v.startsWith("[")){ try{ return JSON.parse(v).map(String); }catch(e){ return []; } }
+  return v.split(/[;,]/).map(t=>t.trim()).filter(Boolean);
+}
+function sizeBucket(v){
+  const nums = String(v||"").replace(/,/g,"").match(/\d+/g);
+  if(!nums) return "";
+  const n = parseInt(nums[0],10);
+  if(n <= 10) return "1–10";
+  if(n <= 50) return "11–50";
+  if(n <= 200) return "51–200";
+  if(n <= 1000) return "201–1,000";
+  if(n <= 5000) return "1,001–5,000";
+  return "5,000+";
+}
+function visitCount(row){
+  const v = pickCol(row, ["recent page count","page views","pageviews","all time page views","total page views","visits","total visits","sessions","visit count"]);
+  const n = toNumber(v);
+  return n > 0 ? n : 1;
+}
+function seenDate(row){
+  const v = String(pickCol(row, ["last seen","last seen at","seen at","last visit","most recent visit","last visited","date","visit date","first seen"]) || "").trim();
+  // RB2B timestamps look like "2026-09-17 01:48:00 +0000"; take the UTC date directly
+  if(/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0,10);
+  return parseAnyDate(pickCol(row, ["last seen","last seen at","seen at","last visit","most recent visit","last visited","date","visit date","first seen"]));
+}
+function profileType(row){ return textCol(row, ["profile type","type"]).toLowerCase(); }
+function isPersonRow(row){
+  const t = profileType(row);
+  return t ? t === "person" : !!(textCol(row, ["first name","last name","full name"]));
+}
+const COMPANY_NAME_COLS = ["company name","company","organization","account name","name"];
+const COMPANY_DOMAIN_COLS = ["website","domain","company domain","company website","company url","url"];
+
+function normalizeCompanies(raw){
+  const byKey = new Map();
+  raw.forEach(r=>{
+    const name = textCol(r, COMPANY_NAME_COLS);
+    const domain = cleanDomain(textCol(r, COMPANY_DOMAIN_COLS));
+    if(!name && !domain) return;
+    const key = domain || name.toLowerCase();
+    const row = {
+      name: name || domain, domain,
+      industry: textCol(r, ["industry","company industry"]),
+      employees: textCol(r, ["estimated employee count","employee count","employees","company size","headcount","employee range"]),
+      revenue: textCol(r, ["estimated revenue","estimate revenue","revenue","annual revenue"]),
+      location: [textCol(r, ["city","company city"]), textCol(r, ["state","company state","region"])].filter(Boolean).join(", ") || textCol(r, ["location","country"]),
+      visits: visitCount(r),
+      people: isPersonRow(r) ? 1 : 0,
+      date: seenDate(r)
+    };
+    const prev = byKey.get(key);
+    if(!prev) byKey.set(key, row);
+    else{
+      prev.visits += row.visits;
+      if(row.date && (!prev.date || row.date > prev.date)) prev.date = row.date;
+      prev.people += row.people;
+      ["industry","employees","revenue","location"].forEach(k=>{ if(!prev[k] && row[k]) prev[k] = row[k]; });
+    }
+  });
+  return [...byKey.values()];
+}
+
+function normalizePeople(raw){
+  const byKey = new Map();
+  raw.forEach(r=>{
+    const first = textCol(r, ["first name","firstname"]);
+    const last = textCol(r, ["last name","lastname"]);
+    const name = [first,last].filter(Boolean).join(" ") || textCol(r, ["full name","name","person"]);
+    const linkedin = textCol(r, ["linkedin url","linkedin","linkedin profile","profile url","person linkedin url"]);
+    if(!name && !linkedin) return;
+    const key = (linkedin || name).toLowerCase();
+    const row = {
+      name: name || "Unknown", linkedin,
+      title: textCol(r, ["title","job title","position"]),
+      company: textCol(r, ["company name","company","organization"]),
+      industry: textCol(r, ["industry"]),
+      employees: textCol(r, ["estimated employee count","employee count","employees","company size","headcount"]),
+      page: firstUrl(textCol(r, ["recent page urls","captured url","page url","most recent page","last page","landing page","url visited","page"])),
+      hot: listCol(r, ["tags"]).some(t=>/hot lead/i.test(t)),
+      visits: visitCount(r),
+      date: seenDate(r)
+    };
+    const prev = byKey.get(key);
+    if(!prev) byKey.set(key, row);
+    else{
+      prev.visits += row.visits;
+      if(row.date && (!prev.date || row.date > prev.date)){ prev.date = row.date; if(row.page) prev.page = row.page; }
+    }
+  });
+  return [...byKey.values()];
+}
+
+// Rows without a date always show; dated rows follow the selected range
+function filterVisitors(rows){
+  const {start,end} = filteredRange();
+  if(!start) return rows;
+  return rows.filter(r => !r.date || (r.date >= start && r.date <= end));
+}
+function byRecent(a,b){ return (b.date||"").localeCompare(a.date||"") || b.visits - a.visits; }
+function topValue(rows, key){
+  const counts = {};
+  rows.forEach(r=>{ if(r[key]) counts[r[key]] = (counts[r[key]]||0) + 1; });
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  return top ? top[0] : "—";
+}
+const SENIOR_TITLE = /\b(chief|c[eotfmrip]o|founder|co-founder|owner|president|partner|vp|vice president|svp|evp|head of|director|principal)\b/i;
+
+/* ============================== ICP fit (Scalestack) ============================== */
+// Rules follow the June 2026 positioning: the wedge is data scale + complexity at enterprises,
+// buyers are RevOps / Sales, Marketing & BizOps / IT & Data. Transparent points, no black box.
+const ICP_INDUSTRIES = [
+  {re:/education|school|universit|non-?profit|social services|government|public (policy|administration)|religio|retail|food|restaurant|hospitality|tourism|real estate|construction|architecture|individual|family/i, pts:0, why:"Industry outside ICP", out:true},
+  {re:/information technology|software|internet|saas|computer|telecom|data|information services/i, pts:35, why:"Tech / software"},
+  {re:/financ|bank|insurance|staffing|recruit|human resources|research|consult|professional and business|corporate services|marketing|advertising/i, pts:22, why:"Data-heavy services"},
+  {re:/./, pts:12, why:"Other enterprise vertical"}
+];
+const ICP_SIZE_PTS = {"5,000+":45, "1,001–5,000":40, "201–1,000":30, "51–200":15, "11–50":5, "1–10":0};
+const PERSONA_BUYER = /rev ?ops|revenue op|sales op|marketing op|biz ?ops|business op|\bops\b|operations|gtm|go-to-market|\bdata\b|analytics|\bcrm\b|salesforce|systems|enablement|\bcio\b|\bcto\b|\bcdo\b|\bcro\b|\bcoo\b|chief (information|technology|data|revenue|operating)|information technology|\bIT (director|manager|lead)|architect|\bAI (lead|strategy|transformation)/i;
+const PERSONA_GTM = /sales|marketing|growth|demand|revenue|\bcmo\b|business development|partnership|alliances|account exec|customer success/i;
+const PERSONA_EXEC = /founder|\bceo\b|(?<!vice )president|owner|managing director|general manager/i;
+const PERSONA_OUT = /student|intern\b|internship|teacher|professor|retired|seeking|looking for|job seeker|freelance|volunteer/i;
+const MID_TITLE = /manager|\blead\b|senior|sr\.?\b|principal|head/i;
+
+function fitTier(score){
+  if(score >= 70) return {key:"strong", label:"Strong"};
+  if(score >= 50) return {key:"good", label:"Good"};
+  if(score >= 30) return {key:"weak", label:"Weak"};
+  return {key:"skip", label:"Skip"};
+}
+function engagementPts(visits){ return visits >= 10 ? 20 : visits >= 5 ? 14 : visits >= 2 ? 8 : 3; }
+
+function scoreCompany(r){
+  const why = [];
+  let score = 0, capped = false;
+  const size = sizeBucket(r.employees);
+  if(size){ score += ICP_SIZE_PTS[size]; why.push(`${size} employees (+${ICP_SIZE_PTS[size]})`); }
+  else { score += 15; why.push("Size unknown (+15)"); }
+  if(size === "1–10"){ capped = true; why.push("Too small for ICP"); }
+  if(r.industry){
+    const ind = ICP_INDUSTRIES.find(i=>i.re.test(r.industry));
+    score += ind.pts; why.push(`${ind.why} (+${ind.pts})`);
+    if(ind.out) capped = true;
+  } else { score += 12; why.push("Industry unknown (+12)"); }
+  const eng = engagementPts(r.visits);
+  score += eng; why.push(`${fmtInt(r.visits)} page view${r.visits===1?"":"s"} (+${eng})`);
+  if(capped) score = Math.min(score, 20);
+  return {score, why, capped};
+}
+
+function scorePerson(r){
+  const co = scoreCompany(r);
+  const why = co.why.slice();
+  let persona = 5, label = "Other role";
+  const t = r.title || "";
+  if(PERSONA_OUT.test(t)){ persona = 0; label = "Not a buyer"; }
+  else if(PERSONA_BUYER.test(t)){ persona = 30; label = "Buyer persona (Ops / Data / IT)"; }
+  else if(PERSONA_GTM.test(t)){ persona = 20; label = "GTM leader"; }
+  else if(PERSONA_EXEC.test(t)){ persona = 18; label = "Exec / founder"; }
+  else if(!t){ persona = 8; label = "Title unknown"; }
+  if(persona > 0 && SENIOR_TITLE.test(t)){ persona += 15; label += ", senior"; }
+  else if(persona > 0 && MID_TITLE.test(t)){ persona += 8; label += ", mid-level"; }
+  why.push(`${label} (+${persona})`);
+  let score = Math.round(co.score * 0.55 + persona);
+  if(co.capped || persona === 0) score = Math.min(score, 25);
+  return {score, why};
+}
+
+function fitBadge(r){
+  const tier = fitTier(r.fit.score);
+  return `<span class="fit ${tier.key}" title="${escapeHtml(r.fit.why.join(" · "))}">${tier.label} <b>${r.fit.score}</b></span>`;
+}
+function skipToggle(kind, hidden){
+  const showing = state.rb2b.showSkip[kind];
+  if(!hidden && !showing) return "";
+  return `<div class="table-tools">Ranked by ICP fit. Hover a badge for the reasons.
+    <button class="text-btn" data-skip="${kind}">${showing ? "Hide Skip rows" : `Show ${fmtInt(hidden)} skipped`}</button></div>`;
+}
+
+function rb2bPill(kind){
+  const file = state.rb2b[kind+"File"];
+  return `<span class="status-pill ${file?'':'sample'}" ${file ? `title="${escapeHtml(file)}"` : ""}><span class="dot"></span><span class="pill-text">${file ? escapeHtml(file) : 'No file yet'}</span></span>`;
+}
+function uploadZoneHtml(kind, loaded){
+  const label = kind === "companies" ? "companies" : "people";
+  return `<div class="upload-zone" id="rb2b-${kind}-upload" role="button" tabindex="0" aria-label="Upload RB2B ${label} CSV">
+    <input type="file" id="rb2b-${kind}-file" accept=".csv,text/csv">
+    <div class="upload-title">⭱ ${loaded ? 'Drop a newer' : 'Drop your'} RB2B ${label} CSV here</div>
+    <div class="upload-sub">${kind === "companies"
+      ? 'Export company visitors from RB2B as CSV. Needs a company name or website column.'
+      : 'Export identified people from RB2B as CSV. Needs name or LinkedIn URL columns.'}</div>
+  </div>`;
+}
+function rangeMiss(total, shown){
+  return total && !shown ? `<div class="empty-state">None of the ${fmtInt(total)} rows in this file fall in the selected range. Try <b>All</b>.</div>` : "";
+}
+
+function renderRb2b(){
+  const root = document.getElementById("rb2bModules");
+  root.innerHTML = `
+    <div class="module" id="mod-rb2b-companies"></div>
+    <div class="module" id="mod-rb2b-people"></div>
+  `;
+  renderRb2bCompanies(document.getElementById("mod-rb2b-companies"));
+  renderRb2bPeople(document.getElementById("mod-rb2b-people"));
+  ["companies","people"].forEach(wireRb2bUpload);
+}
+
+function moduleHead(kind, eyebrow, title){
+  return `<div class="module-head">
+      <div class="module-id">
+        <div class="chip forest">»</div>
+        <div><div class="eyebrow">${eyebrow}</div><div class="module-title">${title}</div></div>
+      </div>
+      <div class="head-actions">
+        ${state.rb2b[kind] ? `<button class="text-btn" data-clear="${kind}">Clear</button>` : ""}
+        ${rb2bPill(kind)}
+      </div>
+    </div>`;
+}
+
+function renderRb2bCompanies(el){
+  const all = state.rb2b.companies;
+  if(!all){
+    el.innerHTML = moduleHead("companies", "Visitors · RB2B", "Companies that visited") +
+      `<div class="empty-state">No companies loaded. Upload an RB2B export to see which accounts are on the site, how often they come back and when they were last seen.</div>` +
+      uploadZoneHtml("companies", false);
+    return;
+  }
+  const inRange = filterVisitors(all);
+  inRange.forEach(r=>{ r.fit = scoreCompany(r); });
+  inRange.sort((a,b)=> b.fit.score - a.fit.score || b.visits - a.visits);
+  const hidden = inRange.filter(r=>r.fit.score < 30).length;
+  const rows = state.rb2b.showSkip.companies ? inRange : inRange.filter(r=>r.fit.score >= 30);
+  const views = inRange.reduce((a,r)=>a+r.visits,0);
+  const repeat = inRange.filter(r=>r.visits >= 2).length;
+  const fits = inRange.filter(r=>r.fit.score >= 50).length;
+  el.innerHTML = moduleHead("companies", "Visitors · RB2B", "Companies that visited") + `
+    <div class="headline-metric"><span class="val tabular">${fmtInt(inRange.length)}</span><span class="cap">companies in range · ${fmtInt(views)} page views</span></div>
+    <div class="stat-row">
+      <div class="stat"><div class="n tabular">${fmtInt(fits)}</div><div class="l">Strong or good ICP fit</div></div>
+      <div class="stat"><div class="n tabular">${fmtInt(hidden)}</div><div class="l">Skip (not ICP)</div></div>
+      <div class="stat"><div class="n tabular">${fmtInt(repeat)}</div><div class="l">Came back (2+ views)</div></div>
+    </div>
+    ${rangeMiss(all.length, inRange.length)}
+    ${skipToggle("companies", hidden)}
+    ${rows.length ? `<div class="table-wrap"><table class="visitors">
+      <thead><tr><th>Fit</th><th>Company</th><th class="hide-sm">Industry</th><th class="hide-sm">Size</th><th class="num">Views</th><th class="num">Last seen</th></tr></thead>
+      <tbody>${rows.map(r=>{
+        const url = safeUrl(r.domain);
+        const who = r.people ? `${r.people} ${r.people===1?"person":"people"} identified` : "";
+        return `<tr>
+          <td>${fitBadge(r)}</td>
+          <td><div class="strong">${escapeHtml(r.name)}</div>${r.domain ? `<div class="sub">${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.domain)}</a>` : escapeHtml(r.domain)}${who ? " · "+who : ""}</div>` : ""}</td>
+          <td class="hide-sm">${escapeHtml(r.industry || "—")}</td>
+          <td class="hide-sm" style="white-space:nowrap;">${escapeHtml(sizeBucket(r.employees) || "—")}</td>
+          <td class="num">${fmtInt(r.visits)}</td>
+          <td class="num">${r.date ? fmtShort(r.date) : "—"}</td>
+        </tr>`;}).join("")}</tbody>
+    </table></div>` : ""}
+    ${uploadZoneHtml("companies", true)}`;
+}
+
+function renderRb2bPeople(el){
+  const all = state.rb2b.people;
+  if(!all){
+    el.innerHTML = moduleHead("people", "Visitors · RB2B", "People that visited") +
+      `<div class="empty-state">No people loaded. Upload an RB2B export to see identified visitors, their titles and the page they landed on. Emails are never shown.</div>` +
+      uploadZoneHtml("people", false);
+    return;
+  }
+  const inRange = filterVisitors(all);
+  inRange.forEach(r=>{ r.fit = scorePerson(r); });
+  inRange.sort((a,b)=> b.fit.score - a.fit.score || byRecent(a,b));
+  const hidden = inRange.filter(r=>r.fit.score < 30).length;
+  const rows = state.rb2b.showSkip.people ? inRange : inRange.filter(r=>r.fit.score >= 30);
+  const companies = new Set(inRange.map(r=>r.company.toLowerCase()).filter(Boolean)).size;
+  const senior = inRange.filter(r=>SENIOR_TITLE.test(r.title)).length;
+  const fits = inRange.filter(r=>r.fit.score >= 50).length;
+  const hasHot = all.some(r=>r.hot);
+  const hot = inRange.filter(r=>r.hot).length;
+  el.innerHTML = moduleHead("people", "Visitors · RB2B", "People that visited") + `
+    <div class="headline-metric"><span class="val tabular">${fmtInt(inRange.length)}</span><span class="cap">people identified · from ${fmtInt(companies)} ${companies===1?"company":"companies"}</span></div>
+    <div class="stat-row">
+      <div class="stat"><div class="n tabular">${fmtInt(fits)}</div><div class="l">Strong or good ICP fit</div></div>
+      <div class="stat"><div class="n tabular">${fmtInt(senior)}</div><div class="l">Director or above</div></div>
+      ${hasHot
+        ? `<div class="stat"><div class="n tabular">${fmtInt(hot)}</div><div class="l">Tagged hot lead</div></div>`
+        : `<div class="stat"><div class="n tabular">${fmtInt(companies)}</div><div class="l">Unique companies</div></div>`}
+    </div>
+    ${rangeMiss(all.length, inRange.length)}
+    ${skipToggle("people", hidden)}
+    ${rows.length ? `<div class="table-wrap"><table class="visitors">
+      <thead><tr><th>Fit</th><th>Person</th><th class="hide-sm">Page</th><th class="num">Views</th><th class="num">Last seen</th></tr></thead>
+      <tbody>${rows.map(r=>{
+        const li = safeUrl(r.linkedin);
+        const name = li ? `<a href="${escapeHtml(li)}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.name)}</a>` : escapeHtml(r.name);
+        return `<tr>
+          <td>${fitBadge(r)}</td>
+          <td><div class="strong">${name}${r.hot ? ' <span class="hot-tag">Hot</span>' : ""}</div>${(r.title || r.company) ? `<div class="sub">${escapeHtml([r.title, r.company].filter(Boolean).join(" · "))}</div>` : ""}</td>
+          <td class="hide-sm"><span class="mono" style="font-size:11px;">${escapeHtml(r.page ? pathOf(r.page) : "—")}</span></td>
+          <td class="num">${fmtInt(r.visits)}</td>
+          <td class="num">${r.date ? fmtShort(r.date) : "—"}</td>
+        </tr>`;}).join("")}</tbody>
+    </table></div>` : ""}
+    ${uploadZoneHtml("people", true)}`;
+}
+
+function wireRb2bUpload(kind){
+  const zone = document.getElementById(`rb2b-${kind}-upload`);
+  const input = document.getElementById(`rb2b-${kind}-file`);
+  zone.addEventListener("click", ()=> input.click());
+  zone.addEventListener("keydown", e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); input.click(); } });
+  ["dragenter","dragover"].forEach(evt=> zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.add("dragover"); }));
+  ["dragleave","drop"].forEach(evt=> zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.remove("dragover"); }));
+  zone.addEventListener("drop", e=>{ if(e.dataTransfer.files[0]) handleRb2bCsv(kind, e.dataTransfer.files[0]); });
+  input.addEventListener("change", e=>{ if(e.target.files[0]) handleRb2bCsv(kind, e.target.files[0]); });
+  const skip = document.querySelector(`[data-skip="${kind}"]`);
+  if(skip) skip.addEventListener("click", ()=>{ state.rb2b.showSkip[kind] = !state.rb2b.showSkip[kind]; renderRb2b(); });
+  const clear = document.querySelector(`[data-clear="${kind}"]`);
+  if(clear) clear.addEventListener("click", ()=>{ state.rb2b[kind] = null; state.rb2b[kind+"File"] = null; renderRb2b(); });
+}
+
+async function handleRb2bCsv(kind, file){
+  const raw = parseCsv(await file.text());
+  // RB2B's combined report mixes Person and Company rows (ProfileType column): fill both cards from one file
+  if(raw.length && profileType(raw[0])){
+    const people = normalizePeople(raw.filter(isPersonRow));
+    const companies = normalizeCompanies(raw);
+    if(people.length){ state.rb2b.people = people; state.rb2b.peopleFile = file.name; }
+    if(companies.length){ state.rb2b.companies = companies; state.rb2b.companiesFile = file.name; }
+    if(people.length || companies.length){ renderRb2b(); return; }
+  }
+  const rows = kind === "companies" ? normalizeCompanies(raw) : normalizePeople(raw);
+  if(!rows.length){
+    alert(kind === "companies"
+      ? "No companies recognized. Expected a column like Company Name or Website in the RB2B export."
+      : "No people recognized. Expected columns like First Name, Last Name or LinkedIn URL in the RB2B export.");
+    return;
+  }
+  state.rb2b[kind] = rows;
+  state.rb2b[kind+"File"] = file.name;
+  renderRb2b();
 }
 
 /* ============================== export ============================== */
